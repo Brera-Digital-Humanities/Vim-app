@@ -218,12 +218,11 @@ function prevPage() {
 // --- draft & complete ---
 
 /**
- * saveDraft() — Salva lo stato corrente come bozza.
+ * saveDraft() — Salva lo stato corrente come bozza (in `drafts`).
  * Apre un modal bottom-sheet con le opzioni "Vai alla home" / "Continua".
  *
- * La bozza è salvata in memoria (draftAnswers, draftPage).
- * NOTA: Non è persistita su disco/localStorage → si perde al refresh.
- * Per persistenza offline usare IndexedDB (vedi integrazione Enketo Express).
+ * NOTA: le bozze vivono in memoria → si perdono al refresh.
+ * Persistenza offline (IndexedDB) prevista nella fase offline.
  */
 function saveDraft() {
   saveDraftSilent();
@@ -241,10 +240,26 @@ function saveDraft() {
   });
 }
 
-/** Salva la bozza senza aprire il modal (riusato dalla popup di uscita). */
+/**
+ * saveDraftSilent() — Salva lo stato corrente come bozza, senza modal.
+ * Se si sta modificando una bozza esistente (window._editingDraft) la aggiorna,
+ * altrimenti ne crea una nuova nell'elenco `drafts`.
+ */
 function saveDraftSilent() {
-  draftAnswers = JSON.parse(JSON.stringify(answers));
-  draftPage    = pageIdx;
+  const entry = {
+    answers:    JSON.parse(JSON.stringify(answers)),
+    mediaFiles: Object.assign({}, mediaFiles),
+    pageIdx:    pageIdx,
+    fieldIdx:   window._fieldIdx || 0,
+    savedAt:    new Date().toLocaleString(),
+    label:      answers['name_english'] || answers['local_name'] || ('Bozza ' + (drafts.length + 1)),
+  };
+  if (window._editingDraft != null && drafts[window._editingDraft]) {
+    drafts[window._editingDraft] = entry;
+  } else {
+    drafts.push(entry);
+    window._editingDraft = drafts.length - 1;
+  }
 }
 
 /**
@@ -307,7 +322,11 @@ function markComplete() {
     label: answers['name_english'] || answers['local_name'] || ('Modulo ' + (outbox.length + 1))
   };
   outbox.push(saved);
-  draftAnswers = null; // Cancella bozza dopo completamento
+  // Se si stava completando una bozza, rimuovila dall'elenco bozze.
+  if (window._editingDraft != null && drafts[window._editingDraft]) {
+    drafts.splice(window._editingDraft, 1);
+  }
+  window._editingDraft = null;
   updateOutboxBadge();
 
   // Schermata di conferma

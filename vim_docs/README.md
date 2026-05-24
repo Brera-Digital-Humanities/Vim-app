@@ -185,7 +185,7 @@ Variabili globali che mantengono lo stato durante una sessione:
 | `mediaFiles` | `{ [name]: File }` | File media caricati/registrati |
 | `outbox` | `Array<{ answers, mediaFiles, savedAt, label }>` | Moduli completati pronti all'invio |
 | `sentForms` | `Array<...>` | Storico moduli già inviati |
-| `draftAnswers` / `draftPage` | object / number | Bozza in corso (sopravvive al ritorno in Home, NON al refresh) |
+| `drafts` | `Array<{ answers, mediaFiles, pageIdx, fieldIdx, savedAt, label }>` | Elenco bozze salvate (schermata "Modifica bozza"); `window._editingDraft` = indice di quella in modifica |
 | `currentLangIdx` | number | Indice in `UI_LANGS` della lingua attiva |
 
 > ⚠️ Le bozze non sono persistenti tra refresh. Per persistenza offline reale

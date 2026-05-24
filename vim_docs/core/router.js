@@ -2,7 +2,7 @@
 
 
 /** Elenco ID di tutte le schermate disponibili */
-const SCREENS = ['screen-lang', 'screen-home', 'screen-form', 'screen-outbox'];
+const SCREENS = ['screen-lang', 'screen-home', 'screen-form', 'screen-drafts', 'screen-outbox'];
 
 /**
  * showScreen(id, title, showPill) — Attiva una schermata e aggiorna l'app bar.
@@ -45,22 +45,32 @@ function barBack() {
 }
 
 /**
- * startFillForm() — Avvia la compilazione del form.
- * Il form è già incorporato (sync Kobo), quindi si parte subito.
- * Se esiste una bozza, la riprende dal punto salvato.
+ * startFillForm() — Avvia la compilazione di un NUOVO modulo, sempre da zero.
+ * La ripresa di una compilazione avviene dalle bozze (resumeDraft).
  */
 function startFillForm() {
-  // Riprendi bozza o inizia nuovo form
-  if (draftAnswers) {
-    answers = JSON.parse(JSON.stringify(draftAnswers));
-    pageIdx = draftPage;
-  } else {
-    answers = {}; mediaFiles = {}; pageIdx = 0;
-  }
-  window._fieldIdx = 0;
+  window._editingDraft = null;   // nuovo modulo, non una bozza
+  answers = {}; mediaFiles = {}; pageIdx = 0;
+  openForm();
+}
+
+/** resumeDraft(i) — Riprende la bozza i dall'elenco bozze. */
+function resumeDraft(i) {
+  const d = drafts[i];
+  if (!d) return;
+  window._editingDraft = i;
+  answers    = JSON.parse(JSON.stringify(d.answers));
+  mediaFiles = Object.assign({}, d.mediaFiles || {});
+  pageIdx    = d.pageIdx || 0;
+  openForm(d.fieldIdx || 0);
+}
+
+/** openForm(fieldIdx) — Mostra la schermata form e renderizza (helper comune). */
+function openForm(fieldIdx) {
+  window._fieldIdx  = fieldIdx || 0;
   window._compiling = true;
   showScreen('screen-form', tr().questionnaire, true);
-  document.getElementById('lang-btn').style.display     = '';
+  document.getElementById('lang-btn').style.display       = '';
   document.getElementById('form-nav-extra').style.display = 'flex';
   renderPage(pageIdx);
 }
@@ -81,21 +91,11 @@ function homeLangChange() {
   showScreen('screen-lang', tr().cambiaLinguaTitle, false);
 }
 
-/**
- * showDraft() — Apre la bozza salvata o mostra messaggio "nessuna bozza".
- * Se esiste una bozza, chiama startFillForm() che la riprende.
- */
+/** showDraft() — Mostra l'elenco delle bozze salvate (schermata dedicata). */
 function showDraft() {
-  if (!draftAnswers) {
-    window._compiling = false;
-    showScreen('screen-form', tr().bozzaTitle, false);
-    document.getElementById('form-area').innerHTML =
-      '<div class="state-error"><p style="color:var(--muted)">' + tr().noBozza + '</p></div>';
-    document.getElementById('form-nav').style.display       = 'none';
-    document.getElementById('form-nav-extra').style.display = 'none';
-    return;
-  }
-  startFillForm();
+  window._compiling = false;
+  showScreen('screen-drafts', tr().bozzaTitle, false);
+  renderDrafts();
 }
 
 /** showOutbox() — Mostra la coda di moduli da inviare */

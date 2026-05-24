@@ -11,6 +11,7 @@
 screens/lang/lang.html
 screens/home/home.html
 screens/form/form.html
+screens/drafts/drafts.html
 screens/outbox/outbox.html
 
 [js]
@@ -28,6 +29,7 @@ core/feedback.js
 core/connectivity.js
 screens/lang/lang.js
 screens/form/form.js
+screens/drafts/drafts.js
 screens/outbox/outbox.js
 core/init.js
 
@@ -43,6 +45,7 @@ styles/screens-base.scss
 screens/lang/lang.scss
 screens/home/home.scss
 screens/form/form.scss
+screens/drafts/drafts.scss
 screens/outbox/outbox.scss
 styles/buttons.scss
 styles/modal.scss
