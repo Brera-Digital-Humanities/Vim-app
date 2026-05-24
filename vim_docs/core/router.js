@@ -25,9 +25,20 @@ function showScreen(id, title, showPill) {
  * Nasconde bottone lingua dall'app bar e riapplica le traduzioni UI.
  */
 function goHome() {
+  window._compiling = false;
   showScreen('screen-home', tr().appTitle, false);
   document.getElementById('lang-btn').style.display = 'none';
   applyUILang();
+}
+
+/**
+ * barBack() — Azione del pulsante indietro nell'app bar.
+ * Durante la compilazione apre la popup di uscita (confirmExit);
+ * nelle altre schermate torna direttamente alla home.
+ */
+function barBack() {
+  if (window._compiling) confirmExit();
+  else goHome();
 }
 
 /**
@@ -44,17 +55,28 @@ function startFillForm() {
     answers = {}; mediaFiles = {}; pageIdx = 0;
   }
   window._fieldIdx = 0;
-  showScreen('screen-form', tr().questionnaire, true);
+  window._compiling = true;
+  showScreen('screen-form', tr().home, true);
   document.getElementById('lang-btn').style.display     = '';
   document.getElementById('form-nav-extra').style.display = 'flex';
   renderPage(pageIdx);
 }
 
-/** changeLang() — Apre la selezione lingua dall'app bar (durante compilazione) */
-function changeLang()     { renderLangScreen(); showScreen('screen-lang', tr().cambiaLinguaTitle, false); }
+/** changeLang() — Cambio lingua dall'app bar DURANTE la compilazione:
+ *  ricorda il punto (sezione + campo) per tornarci dopo la scelta. */
+function changeLang() {
+  langReturn      = 'form';
+  langReturnField = window._fieldIdx || 0;
+  renderLangScreen();
+  showScreen('screen-lang', tr().cambiaLinguaTitle, false);
+}
 
-/** homeLangChange() — Apre la selezione lingua dalla home */
-function homeLangChange() { renderLangScreen(); showScreen('screen-lang', tr().cambiaLinguaTitle, false); }
+/** homeLangChange() — Cambio lingua dalla home: dopo la scelta torna alla home. */
+function homeLangChange() {
+  langReturn = 'home';
+  renderLangScreen();
+  showScreen('screen-lang', tr().cambiaLinguaTitle, false);
+}
 
 /**
  * showDraft() — Apre la bozza salvata o mostra messaggio "nessuna bozza".
@@ -62,6 +84,7 @@ function homeLangChange() { renderLangScreen(); showScreen('screen-lang', tr().c
  */
 function showDraft() {
   if (!draftAnswers) {
+    window._compiling = false;
     showScreen('screen-form', tr().bozzaTitle, false);
     document.getElementById('form-area').innerHTML =
       '<div class="state-error"><p style="color:var(--muted)">' + tr().noBozza + '</p></div>';
@@ -83,6 +106,7 @@ function showOutbox() {
  * In questa versione mostra solo metadati (data invio), non le risposte.
  */
 function showSent() {
+  window._compiling = false;
   showScreen('screen-form', tr().inviatiTitle, false);
   document.getElementById('form-nav').style.display       = 'none';
   document.getElementById('form-nav-extra').style.display = 'none';

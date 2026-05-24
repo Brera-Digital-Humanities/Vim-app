@@ -49,11 +49,19 @@ const VIM_LANG_it = {
       // — Header sezione form —
       sectionLabel:  'Sezione',
       requiredNote:  'Campi obbligatori per il completamento',
+      // — Barra form —
+      home:         'Home',
       // — Modal salva bozza —
       draftTitle:   'Bozza salvata',
       draftMsg:     'Vuoi tornare alla home o continuare la compilazione?',
       draftGoHome:  'Vai alla home',
       draftStay:    'Continua qui',
+      // — Modal uscita dal form —
+      exitTitle:    'Uscire dalla compilazione?',
+      exitMsg:      'Se esci senza salvare perdi quello che hai inserito finora.',
+      exitSave:     'Salva bozza ed esci',
+      exitDiscard:  'Esci senza salvare',
+      exitStay:     'Rimani',
       // — Media —
       tapRecord:       'Registra',
       tapUploadAudio:  'Carica audio',

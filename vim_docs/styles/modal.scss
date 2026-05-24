@@ -85,4 +85,17 @@
   &:hover { border-color: var(--accent); color: var(--ink); }
 }
 
+// Destructive action (e.g. "exit without saving") — outlined in error red
+.modal-btn-danger {
+  width: 100%; padding: 13px;
+  border: 1px solid var(--error); border-radius: 10px;
+  background: transparent; color: var(--error);
+  font-family: $font-sans; font-size: .82rem;
+  letter-spacing: .06em; text-transform: uppercase;
+  cursor: pointer;
+  transition: background $transition-fast, color $transition-fast;
+
+  &:hover { background: var(--error); color: var(--bg); }
+}
+
 

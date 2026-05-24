@@ -43,13 +43,15 @@ function syncLangConfirmBtn() {
 function confirmLanguage() {
   currentLangIdx = selectedLangIdx;
   applyUILang();
-  // Determina se l'utente era già nel form
-  const inForm = pageIdx > 0 || Object.keys(answers).length > 0;
-  if (inForm) {
-    showScreen('screen-form', tr().questionnaire, true);
+  // Se il cambio lingua è partito dal form, torna esattamente dove si era
+  // (stessa sezione e stesso campo); altrimenti torna alla home.
+  if (langReturn === 'form') {
+    window._compiling = true;
+    showScreen('screen-form', tr().home, true);
     document.getElementById('lang-btn').style.display       = '';
     document.getElementById('form-nav-extra').style.display = 'flex';
-    renderPage(pageIdx); // Re-renderizza con le nuove label
+    window._fieldIdx = langReturnField;
+    renderPage(pageIdx); // Re-renderizza con le nuove label, stesso campo
   } else {
     goHome();
   }

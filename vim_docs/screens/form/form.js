@@ -10,6 +10,7 @@
  */
 function renderPage(idx) {
   pageIdx = idx;
+  window._compiling = true;   // rende il back dell'app bar una conferma di uscita
   const area = document.getElementById('form-area');
   const fill = document.getElementById('prog-fill');
   const pg   = PAGES[idx];
@@ -29,7 +30,7 @@ function renderPage(idx) {
 
   // Pill contatore sezioni
   const pill = document.getElementById('pill');
-  if (pill) { pill.textContent = (idx + 1) + ' / ' + PAGES.length; pill.style.display = ''; }
+  if (pill) { pill.textContent = tr().sectionLabel + ' ' + (idx + 1) + '/' + PAGES.length; pill.style.display = ''; }
 
   // Bottoni navigazione
   const nav     = document.getElementById('form-nav');
@@ -143,34 +144,65 @@ function prevPage() {
  * Per persistenza offline usare IndexedDB (vedi integrazione Enketo Express).
  */
 function saveDraft() {
-  draftAnswers = JSON.parse(JSON.stringify(answers));
-  draftPage    = pageIdx;
+  saveDraftSilent();
 
-  const s     = tr();
-  const isRTL = !!UI_LANGS[currentLangIdx].rtl;
-
-  // Crea modal bottom-sheet
-  const overlay = document.createElement('div');
-  overlay.className = 'modal-overlay';
-  overlay.setAttribute('dir', isRTL ? 'rtl' : 'ltr');
-  overlay.innerHTML = `
-    <div class="modal-sheet">
-      <div class="modal-handle"></div>
+  const s = tr();
+  openModal(`
       <div class="modal-title">${s.draftTitle}</div>
       <div class="modal-msg">${s.draftMsg}</div>
       <div class="modal-actions">
         <button class="modal-btn-primary"  id="modal-home-btn">${s.draftGoHome}</button>
         <button class="modal-btn-secondary" id="modal-stay-btn">${s.draftStay}</button>
-      </div>
-    </div>`;
+      </div>`, close => {
+    document.getElementById('modal-home-btn').onclick = () => { close(); goHome(); };
+    document.getElementById('modal-stay-btn').onclick = () => close();
+  });
+}
 
-  // Append dentro phone-shell per restare nei bounds della cornice
+/** Salva la bozza senza aprire il modal (riusato dalla popup di uscita). */
+function saveDraftSilent() {
+  draftAnswers = JSON.parse(JSON.stringify(answers));
+  draftPage    = pageIdx;
+}
+
+/**
+ * confirmExit() — Popup di uscita dal form (dal pulsante indietro dell'app bar).
+ * Tre scelte: salva bozza ed esci, esci senza salvare, rimani.
+ */
+function confirmExit() {
+  const s = tr();
+  openModal(`
+      <div class="modal-title">${s.exitTitle}</div>
+      <div class="modal-msg">${s.exitMsg}</div>
+      <div class="modal-actions">
+        <button class="modal-btn-primary"   id="exit-save-btn">${s.exitSave}</button>
+        <button class="modal-btn-danger"    id="exit-discard-btn">${s.exitDiscard}</button>
+        <button class="modal-btn-secondary" id="exit-stay-btn">${s.exitStay}</button>
+      </div>`, close => {
+    document.getElementById('exit-save-btn').onclick    = () => { close(); saveDraftSilent(); goHome(); };
+    document.getElementById('exit-discard-btn').onclick = () => {
+      close();
+      answers = {}; mediaFiles = {}; pageIdx = 0; window._fieldIdx = 0;
+      goHome();
+    };
+    document.getElementById('exit-stay-btn').onclick    = () => close();
+  });
+}
+
+/**
+ * openModal(innerHTML, wire) — Crea un bottom-sheet modal dentro .phone-shell.
+ * `wire(close)` collega gli handler dei bottoni; `close()` rimuove il modal.
+ */
+function openModal(innerHTML, wire) {
+  const isRTL = !!UI_LANGS[currentLangIdx].rtl;
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.setAttribute('dir', isRTL ? 'rtl' : 'ltr');
+  overlay.innerHTML = `<div class="modal-sheet"><div class="modal-handle"></div>${innerHTML}</div>`;
   document.querySelector('.phone-shell').appendChild(overlay);
-
-  document.getElementById('modal-home-btn').onclick = () => { overlay.remove(); goHome(); };
-  document.getElementById('modal-stay-btn').onclick = () => { overlay.remove(); };
-  // Tap fuori dal foglio chiude il modal
-  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+  const close = () => overlay.remove();
+  overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+  wire(close);
 }
 
 /**
