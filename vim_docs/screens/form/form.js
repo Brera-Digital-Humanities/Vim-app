@@ -87,7 +87,17 @@ function renderPage(idx) {
   card.className = 'q-card' + (goingBack ? ' back' : '');
   card.innerHTML = buildQuestion(field);
   area.appendChild(card);
+
+  // Alert "campo obbligatorio" (nascosto finché non si forza Avanti)
+  const err = document.createElement('div');
+  err.className = 'field-error';
+  err.id = 'field-error';
+  err.textContent = tr().fieldRequired;
+  err.style.display = 'none';
+  area.appendChild(err);
+
   attachListeners(card, field);
+  updateNextBtnState();
   area.scrollTop = 0;
 }
 
@@ -99,6 +109,17 @@ function nextField() {
   const pg        = PAGES[pageIdx];
   const visFields = pg.fields.filter(f => isVisible(f.name));
   const fi        = window._fieldIdx || 0;
+  const field     = visFields[fi];
+
+  // Campo obbligatorio non compilato: blocca l'avanzamento e mostra l'alert.
+  if (field && isFieldRequired(field) && isFieldEmpty(field)) {
+    const err = document.getElementById('field-error');
+    if (err) {
+      err.style.display = '';
+      err.classList.remove('shake'); void err.offsetWidth; err.classList.add('shake');
+    }
+    return;
+  }
 
   if (fi < visFields.length - 1) {
     // Prossimo campo nella stessa sezione
@@ -111,6 +132,31 @@ function nextField() {
       renderPage(pageIdx + 1);
     }
     // Se ultima sezione, i bottoni "Avanti" è già nascosto da renderPage()
+  }
+}
+
+/** currentField() — Il campo attualmente mostrato (sezione + _fieldIdx). */
+function currentField() {
+  const pg = PAGES[pageIdx];
+  if (!pg) return null;
+  const vis = pg.fields.filter(f => isVisible(f.name));
+  return vis[window._fieldIdx || 0] || null;
+}
+
+/**
+ * updateNextBtnState() — "Avanti" appare disattivato (.locked) quando il campo
+ * corrente è obbligatorio e vuoto. Resta cliccabile: il click mostra l'alert
+ * (vedi nextField). Quando il campo viene compilato, sblocca e nasconde l'alert.
+ */
+function updateNextBtnState() {
+  const btn = document.getElementById('btn-next');
+  if (!btn) return;
+  const f = currentField();
+  const locked = !!(f && isFieldRequired(f) && isFieldEmpty(f));
+  btn.classList.toggle('locked', locked);
+  if (!locked) {
+    const err = document.getElementById('field-error');
+    if (err) err.style.display = 'none';
   }
 }
 
@@ -405,6 +451,7 @@ function handleMedia(event, name, kind) {
     .forEach(el => el.classList.add('captured'));
 
   updateCompleteBtn();
+  updateNextBtnState();
 }
 
 
@@ -452,6 +499,7 @@ function attachListeners(card, q) {
     inp.addEventListener('input', () => {
       answers[q.name] = inp.value;
       updateCompleteBtn();
+      updateNextBtnState();
     });
   });
 
@@ -465,6 +513,7 @@ function attachListeners(card, q) {
       item.classList.add('selected');
       answers[name] = val;
       updateCompleteBtn();
+      updateNextBtnState();
     });
   });
 }

@@ -49,6 +49,7 @@ const VIM_LANG_it = {
       // — Header sezione form —
       sectionLabel:  'Sezione',
       requiredNote:  'Campi obbligatori per il completamento',
+      fieldRequired: 'Questo campo è obbligatorio',
       // — Barra form —
       home:         'Home',
       // — Modal salva bozza —

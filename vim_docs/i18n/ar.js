@@ -41,6 +41,7 @@ const VIM_LANG_ar = {
       continua: 'متابعة',
       sectionLabel:  'قسم',
       requiredNote:  'الحقول المطلوبة للإكمال',
+      fieldRequired: 'هذا الحقل مطلوب',
       home:         'الرئيسية',
       draftTitle:   'تم حفظ المسودة',
       draftMsg:     'هل تريد العودة إلى الرئيسية أم الاستمرار في التعبئة؟',

@@ -257,3 +257,35 @@ select {
 }
 
 
+
+
+// Required-field feedback ---------------------------------------------------
+
+// "Next" looks disabled when the current required field is empty, but stays
+// clickable so the click can surface the alert (see nextField()).
+.btn.btn-next.locked {
+  background: var(--muted);
+  cursor: not-allowed;
+  opacity: .8;
+}
+
+// Inline "this field is required" alert, shown when forcing Next.
+.field-error {
+  margin: 12px 4px 0;
+  padding: 10px 12px;
+  border: 1px solid var(--error);
+  border-radius: var(--radius);
+  background: rgba(192, 57, 43, .08);
+  color: var(--error);
+  font-family: $font-sans;
+  font-size: .82rem;
+  font-weight: 500;
+}
+
+.field-error.shake { animation: vimShake .35s ease; }
+
+@keyframes vimShake {
+  0%,100% { transform: translateX(0); }
+  20%,60% { transform: translateX(-5px); }
+  40%,80% { transform: translateX(5px); }
+}

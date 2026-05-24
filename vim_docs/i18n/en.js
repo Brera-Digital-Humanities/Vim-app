@@ -41,6 +41,7 @@ const VIM_LANG_en = {
       continua: 'Continue',
       sectionLabel:  'Section',
       requiredNote:  'Required fields for completion',
+      fieldRequired: 'This field is required',
       home:         'Home',
       draftTitle:   'Draft saved',
       draftMsg:     'Go back to home or continue filling in?',
