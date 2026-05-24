@@ -135,6 +135,27 @@ function nextField() {
   }
 }
 
+/**
+ * clearDependentFilters(changedName) — Quando cambia un campo da cui dipende
+ * un cascading select, azzera i campi figli il cui valore non è più valido.
+ * Es: cambiando file_occasion_cat, scarta file_occasion se l'occasione scelta
+ * non appartiene più alla nuova categoria.
+ */
+function clearDependentFilters(changedName) {
+  PAGES.forEach(p => p.fields.forEach(f => {
+    if (!f.choice_filter) return;
+    const m = f.choice_filter.match(/(\w+)\s*=\s*\$\{(\w+)\}/);
+    if (!m || m[2] !== changedName) return;
+    const cur = answers[f.name];
+    if (!cur) return;
+    const col  = m[1];
+    const list = f.type.split(' ')[1] || '';
+    const opts = CHOICES[list] || [];
+    const stillValid = opts.some(c => c.name === cur && c[col] === answers[changedName]);
+    if (!stillValid) delete answers[f.name];
+  }));
+}
+
 /** currentField() — Il campo attualmente mostrato (sezione + _fieldIdx). */
 function currentField() {
   const pg = PAGES[pageIdx];
@@ -509,6 +530,7 @@ function attachListeners(card, q) {
   card.querySelectorAll('input:not([type=file]):not([type=range]), textarea, select').forEach(inp => {
     inp.addEventListener('input', () => {
       answers[q.name] = inp.value;
+      clearDependentFilters(q.name);
       updateCompleteBtn();
       updateNextBtnState();
     });
@@ -523,6 +545,7 @@ function attachListeners(card, q) {
       card.querySelectorAll(`.choice-item[data-name="${name}"]`).forEach(i => i.classList.remove('selected'));
       item.classList.add('selected');
       answers[name] = val;
+      clearDependentFilters(name);
       updateCompleteBtn();
       updateNextBtnState();
     });
