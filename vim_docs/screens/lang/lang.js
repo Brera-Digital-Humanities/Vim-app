@@ -17,11 +17,21 @@ function renderLangScreen() {
     item.onclick = () => {
       selectedLangIdx = i;
       list.querySelectorAll('.lang-item').forEach((el, j) => el.classList.toggle('active', j === i));
-      document.getElementById('lang-confirm-btn').disabled     = false;
-      document.getElementById('lang-confirm-btn').textContent  = UI_LANGS[i].ui.continua;
+      syncLangConfirmBtn();
     };
     list.appendChild(item);
   });
+  // A language is preselected (default = index 0), so "Continua" starts
+  // enabled and consistent with the active item.
+  syncLangConfirmBtn();
+}
+
+/** Keep the "Continua" button in sync with the active language item. */
+function syncLangConfirmBtn() {
+  const btn = document.getElementById('lang-confirm-btn');
+  if (!btn) return;
+  btn.disabled    = false;
+  btn.textContent = UI_LANGS[selectedLangIdx].ui.continua;
 }
 
 /**
