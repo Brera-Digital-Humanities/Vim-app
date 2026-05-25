@@ -60,6 +60,7 @@ const VIM_LANG_it = {
       fieldRequired: 'Questo campo è obbligatorio',
       // — Form bar —
       home:         'Home',
+      back:         'Indietro',
       // — Save-draft modal —
       draftTitle:   'Bozza salvata',
       draftMsg:     'Vuoi tornare alla home o continuare la compilazione?',

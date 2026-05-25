@@ -1,12 +1,14 @@
-// VIM — offline persistence (IndexedDB). Drafts and outbox use one record per
-// form (keyed by its instance id) so saves are granular and media Blobs survive;
-// small singletons (sentForms, auth, lang) live in the 'state' store.
+// VIM — offline persistence (IndexedDB). Drafts, outbox and sent forms use one
+// record per form (keyed by its instance id) so saves are granular and media
+// Blobs survive in drafts/outbox; auth and lang live in the 'state' store.
+// Sent records keep only text (answers incl. media filenames), no Blobs.
 
 const VIM_DB = 'vim';
-const DB_VERSION   = 2;
-const STORE_STATE  = 'state';    // singletons: sentForms, auth, lang
+const DB_VERSION   = 3;
+const STORE_STATE  = 'state';    // singletons: auth, lang
 const STORE_DRAFTS = 'drafts';   // one record per draft  (keyPath 'id')
 const STORE_OUTBOX = 'outbox';   // one record per queued submission (keyPath 'id')
+const STORE_SENT   = 'sent';     // one record per sent form, text only (keyPath 'id')
 
 function _vimOpenDB() {
   return new Promise((resolve, reject) => {
@@ -16,6 +18,7 @@ function _vimOpenDB() {
       if (!db.objectStoreNames.contains(STORE_STATE))  db.createObjectStore(STORE_STATE);
       if (!db.objectStoreNames.contains(STORE_DRAFTS)) db.createObjectStore(STORE_DRAFTS, { keyPath: 'id' });
       if (!db.objectStoreNames.contains(STORE_OUTBOX)) db.createObjectStore(STORE_OUTBOX, { keyPath: 'id' });
+      if (!db.objectStoreNames.contains(STORE_SENT))   db.createObjectStore(STORE_SENT,   { keyPath: 'id' });
     };
     req.onsuccess = () => resolve(req.result);
     req.onerror   = () => reject(req.error);
@@ -51,11 +54,11 @@ function removeDraftRecord(id)  { return _tx(STORE_DRAFTS, 'readwrite', s => s.d
 function saveOutboxRecord(rec)  { return _tx(STORE_OUTBOX, 'readwrite', s => s.put(rec)); }
 function removeOutboxRecord(id) { return _tx(STORE_OUTBOX, 'readwrite', s => s.delete(id)); }
 
+/** saveSentRecord(rec) — Persist one sent form (text only, no Blobs). */
+function saveSentRecord(rec)    { return _tx(STORE_SENT, 'readwrite', s => s.put(rec)); }
+
 // Put a singleton value under `key` in the 'state' store.
 function _saveState(key, value) { return _tx(STORE_STATE, 'readwrite', s => s.put(value, key)); }
-
-/** saveState() — Persist the sent-forms log (the small singleton list). */
-function saveState() { return _saveState('sentForms', sentForms); }
 
 /** saveAuth() — Persist the tester login state (provisional). */
 function saveAuth()  { return _saveState('auth', { loggedIn, testerName }); }
@@ -67,29 +70,34 @@ function saveLang()  { return _saveState('lang', { currentLangIdx, langChosen })
 function loadState() {
   if (!('indexedDB' in window)) return Promise.resolve();
   return _vimOpenDB().then(db => new Promise(resolve => {
-    const tx    = db.transaction([STORE_STATE, STORE_DRAFTS, STORE_OUTBOX], 'readonly');
+    const tx    = db.transaction([STORE_STATE, STORE_DRAFTS, STORE_OUTBOX, STORE_SENT], 'readonly');
     const state = tx.objectStore(STORE_STATE);
     const get   = key   => new Promise(r => { const q = state.get(key);                 q.onsuccess = () => r(q.result);      q.onerror = () => r(undefined); });
     const all   = store => new Promise(r => { const q = tx.objectStore(store).getAll();  q.onsuccess = () => r(q.result || []); q.onerror = () => r([]); });
-    Promise.all([all(STORE_DRAFTS), all(STORE_OUTBOX), get('sentForms'), get('auth'), get('lang'), get('drafts'), get('outbox')])
-      .then(([d, o, s, a, l, legacyDrafts, legacyOutbox]) => {
-        drafts = d;
-        outbox = o;
-        if (Array.isArray(s)) sentForms = s;
+    Promise.all([all(STORE_DRAFTS), all(STORE_OUTBOX), all(STORE_SENT), get('auth'), get('lang'), get('drafts'), get('outbox'), get('sentForms')])
+      .then(([d, o, sent, a, l, legacyDrafts, legacyOutbox, legacySent]) => {
+        drafts    = d;
+        outbox    = o;
+        sentForms = sent;
         if (a && typeof a === 'object') { loggedIn = !!a.loggedIn; testerName = a.testerName || ''; }
         if (l && typeof l === 'object' && typeof l.currentLangIdx === 'number') {
           currentLangIdx = l.currentLangIdx;
           langChosen     = !!l.langChosen;
         }
-        // Migrate v1 data (whole arrays under single keys) to per-record stores, once.
-        _migrateLegacy(legacyDrafts, legacyOutbox);
+        // Migrate older layouts (whole arrays under single keys) to per-record stores, once.
+        _migrateLegacy(legacyDrafts, legacyOutbox, legacySent);
         resolve();
       });
   })).catch(() => {});
 }
 
-// One-time migration from the v1 layout (drafts/outbox arrays in 'state').
-function _migrateLegacy(legacyDrafts, legacyOutbox) {
+// One-time migration from older layouts (drafts/outbox/sentForms arrays in 'state').
+function _migrateLegacy(legacyDrafts, legacyOutbox, legacySent) {
+  if (!sentForms.length && Array.isArray(legacySent) && legacySent.length) {
+    sentForms = legacySent.map(r => (r.id ? r : Object.assign({ id: newId() }, r)));
+    sentForms.forEach(saveSentRecord);
+    _tx(STORE_STATE, 'readwrite', s => s.delete('sentForms'));
+  }
   if (!drafts.length && Array.isArray(legacyDrafts) && legacyDrafts.length) {
     drafts = legacyDrafts.map(r => (r.id ? r : Object.assign({ id: newId() }, r)));
     drafts.forEach(saveDraftRecord);

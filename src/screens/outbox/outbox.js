@@ -56,11 +56,14 @@ async function _sendItem(item) {
   const xml = item.xml || buildSubmissionXml(item.answers, item.mediaFiles, item.id);
   const res = await doSubmit(xml, item.mediaFiles);
   if (res.ok) {
-    sentForms.push({ sentAt: new Date().toLocaleString() });
+    // Keep a text-only record (answers include media filenames); drop the media
+    // Blobs by removing the outbox record → keeps the DB light.
+    const sentRec = { id: item.id, label: item.label, sentAt: new Date().toLocaleString(), answers: item.answers };
+    sentForms.push(sentRec);
+    saveSentRecord(sentRec);
     const i = outbox.indexOf(item);
     if (i > -1) outbox.splice(i, 1);
     removeOutboxRecord(item.id);
-    saveState();              // persist the sent-forms log
     updateOutboxBadge();
   } else if (res.permanent) {
     item.failed = true;       // won't auto-retry; persist the flag

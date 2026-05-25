@@ -51,6 +51,7 @@ const VIM_LANG_ar = {
       requiredNote:  'الحقول المطلوبة للإكمال',
       fieldRequired: 'هذا الحقل مطلوب',
       home:         'الرئيسية',
+      back:         'رجوع',
       draftTitle:   'تم حفظ المسودة',
       draftMsg:     'هل تريد العودة إلى الرئيسية أم الاستمرار في التعبئة؟',
       draftGoHome:  'الذهاب إلى الرئيسية',

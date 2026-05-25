@@ -99,26 +99,65 @@ function showOutbox() {
   renderOutbox();
 }
 
-/** showSent() — Show sent forms (metadata only — sent date, not the answers). */
+/** showSent() — List the sent forms (name + date); each opens a read-only view.
+ *  Only text is kept (no media), so the detail shows values and file names. */
 function showSent() {
   window._compiling = false;
   showScreen('screen-form', tr().inviatiTitle, false);
   document.getElementById('form-nav').style.display       = 'none';
   document.getElementById('form-nav-extra').style.display = 'none';
+  const area = document.getElementById('form-area');
   if (!sentForms.length) {
-    document.getElementById('form-area').innerHTML =
-      '<div class="state-error"><p style="color:var(--muted)">' + tr().noInviati + '</p></div>';
+    area.innerHTML = '<div class="state-error"><p style="color:var(--muted)">' + tr().noInviati + '</p></div>';
     return;
   }
   let html = '<div style="padding:12px 0">';
   sentForms.forEach((f, i) => {
-    html += `<div style="padding:12px 0;border-bottom:1px solid var(--border);font-size:.82rem;">
-      <div style="font-weight:500">#${i+1}</div>
-      <div style="color:var(--muted);font-size:.72rem">${f.sentAt}</div>
+    html += `<div onclick="showSentDetail(${i})" style="padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px">
+      <div>
+        <div style="font-weight:500;font-size:.84rem;color:var(--ink)">${f.label || ('#' + (i + 1))}</div>
+        <div style="color:var(--muted);font-size:.72rem">${f.sentAt}</div>
+      </div>
+      <span style="color:var(--muted)">›</span>
     </div>`;
   });
   html += '</div>';
-  document.getElementById('form-area').innerHTML = html;
+  area.innerHTML = html;
+}
+
+/** showSentDetail(i) — Read-only view of a sent form: field labels + values,
+ *  media shown as the file name (no media is stored). */
+function showSentDetail(i) {
+  const f = sentForms[i];
+  if (!f) return;
+  let rows = '';
+  PAGES.forEach(pg => pg.fields.forEach(q => {
+    const v = f.answers ? f.answers[q.name] : undefined;
+    if (v === undefined || v === null || v === '' || (Array.isArray(v) && v.length === 0)) return;
+    rows += `<div style="padding:8px 0;border-bottom:1px solid var(--border)">
+      <div style="font-size:.7rem;color:var(--muted)">${getLabel(q)}</div>
+      <div style="font-size:.84rem;color:var(--ink)">${_sentValueText(q, v)}</div>
+    </div>`;
+  }));
+  if (!rows) rows = '<p style="color:var(--muted);font-size:.82rem">—</p>';
+  document.getElementById('form-area').innerHTML = `
+    <button onclick="showSent()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:.8rem;padding:8px 0">‹ ${tr().back}</button>
+    <div style="font-weight:500;font-size:.9rem;margin:4px 0 2px;color:var(--ink)">${f.label || ('#' + (i + 1))}</div>
+    <div style="color:var(--muted);font-size:.72rem;margin-bottom:10px">${f.sentAt}</div>
+    ${rows}`;
+}
+
+// Display text for a sent value: resolve choice labels; text/date/media shown as-is.
+function _sentValueText(q, v) {
+  const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const t = q.type || '';
+  if (t.startsWith('select_')) {
+    const list = CHOICES[t.split(' ')[1]] || [];
+    return (Array.isArray(v) ? v : [v])
+      .map(n => { const c = list.find(x => x.name === n); return esc(c ? getChoiceLabel(c) : n); })
+      .join(', ');
+  }
+  return esc(v);   // text / number / date / media filename
 }
 
 

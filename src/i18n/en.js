@@ -51,6 +51,7 @@ const VIM_LANG_en = {
       requiredNote:  'Required fields for completion',
       fieldRequired: 'This field is required',
       home:         'Home',
+      back:         'Back',
       draftTitle:   'Draft saved',
       draftMsg:     'Go back to home or continue filling in?',
       draftGoHome:  'Go to home',
