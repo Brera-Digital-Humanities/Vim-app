@@ -8,7 +8,7 @@ function renderSent() {
 
   const list = document.getElementById('sent-list');
   if (!sentForms.length) {
-    list.innerHTML = '<p style="font-size:.82rem;color:var(--muted);padding:8px 0;">' + tr().noInviati + '</p>';
+    list.innerHTML = '<p class="list-empty">' + tr().noInviati + '</p>';
     return;
   }
   list.innerHTML = '';
@@ -20,8 +20,8 @@ function renderSent() {
     el.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
         <div>
-          <div style="font-size:.88rem;font-weight:500;color:var(--ink)">${f.label || ('#' + (i + 1))}</div>
-          <div style="font-size:.7rem;color:var(--muted);margin-top:2px">${f.sentAt}</div>
+          <div class="card-title">${f.label || ('#' + (i + 1))}</div>
+          <div class="card-meta">${f.sentAt}</div>
         </div>
         <span style="color:var(--muted)">›</span>
       </div>`;

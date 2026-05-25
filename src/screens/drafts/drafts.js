@@ -7,7 +7,7 @@ function renderDrafts() {
 
   const list = document.getElementById('drafts-list');
   if (!drafts.length) {
-    list.innerHTML = '<p style="font-size:.82rem;color:var(--muted);padding:8px 0;">' + tr().noBozza + '</p>';
+    list.innerHTML = '<p class="list-empty">' + tr().noBozza + '</p>';
     return;
   }
   list.innerHTML = '';
@@ -15,17 +15,11 @@ function renderDrafts() {
     const el = document.createElement('div');
     el.className = 'list-card';
     el.innerHTML = `
-      <div style="font-size:.88rem;font-weight:500;color:var(--ink)">${item.label}</div>
-      <div style="font-size:.7rem;color:var(--muted);margin-top:2px">${tr().formSavedAt} ${item.savedAt}</div>
-      <div style="display:flex;gap:8px;margin-top:10px">
-        <button onclick="resumeDraft(${i})"
-          style="flex:1;padding:8px;border:none;border-radius:8px;background:var(--ink);color:var(--bg);font-size:.75rem;cursor:pointer;">
-          ${tr().resume}
-        </button>
-        <button onclick="deleteDraft(${i})"
-          style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:none;font-size:.75rem;cursor:pointer;color:var(--error)">
-          ✕
-        </button>
+      <div class="card-title">${item.label}</div>
+      <div class="card-meta">${tr().formSavedAt} ${item.savedAt}</div>
+      <div class="card-actions">
+        <button class="card-btn primary" onclick="resumeDraft(${i})">${tr().resume}</button>
+        <button class="card-btn danger" onclick="deleteDraft(${i})">✕</button>
       </div>`;
     list.appendChild(el);
   });

@@ -52,6 +52,29 @@
   border-radius: 12px;
 }
 
+// Shared bits inside a list card (title, date, actions row, buttons, warning)
+.card-title { font-size: .88rem; font-weight: 500; color: var(--ink); }
+.card-meta  { font-size: .7rem;  color: var(--muted); margin-top: 2px; }
+.card-warn  { font-size: .7rem;  color: var(--error); margin-top: 4px; }
+.card-actions { display: flex; gap: 8px; margin-top: 10px; }
+
+// Card button: outlined by default, with .primary (filled) and .danger variants
+.card-btn {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: none;
+  color: var(--ink);
+  font-size: .75rem;
+  cursor: pointer;
+
+  &.primary { flex: 1; padding: 8px; border: none; background: var(--ink); color: var(--bg); }
+  &.danger  { color: var(--error); }
+}
+
+// Empty-state message of a list screen
+.list-empty { font-size: .82rem; color: var(--muted); padding: 8px 0; }
+
 // Grey persistence note shown on the drafts / outbox screens (text set via JS)
 .persist-note {
   padding: 0 16px 8px;

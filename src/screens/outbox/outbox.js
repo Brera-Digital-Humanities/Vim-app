@@ -12,37 +12,27 @@ function renderOutbox() {
 
   const list = document.getElementById('outbox-list');
   if (!outbox.length) {
-    list.innerHTML = '<p style="font-size:.82rem;color:var(--muted);padding:8px 0;">' + tr().noOutbox + '</p>';
+    list.innerHTML = '<p class="list-empty">' + tr().noOutbox + '</p>';
     return;
   }
   const s = tr();
   list.innerHTML = '';
   outbox.forEach((item, i) => {
     const auto = item.autoSend !== false;   // default (legacy) = auto
-    const failNote = item.failed
-      ? `<div style="font-size:.7rem;color:var(--error);margin-top:4px">⚠️ ${s.sendFailed}</div>` : '';
+    const failNote = item.failed ? `<div class="card-warn">⚠️ ${s.sendFailed}</div>` : '';
     const el = document.createElement('div');
     el.className = 'list-card';
     el.innerHTML = `
-      <div style="font-size:.88rem;font-weight:500;color:var(--ink)">${item.label}</div>
-      <div style="font-size:.7rem;color:var(--muted);margin-top:2px">${s.formSavedAt} ${item.savedAt}</div>
+      <div class="card-title">${item.label}</div>
+      <div class="card-meta">${s.formSavedAt} ${item.savedAt}</div>
       <button class="ob-auto ${auto ? 'on' : ''}" onclick="toggleAutoSend(${i})">
         ${auto ? '⚡' : '✋'} ${s.autoSendLabel}: ${auto ? s.autoOn : s.autoOff}
       </button>
       ${failNote}
-      <div style="display:flex;gap:8px;margin-top:10px">
-        <button onclick="editOutbox(${i})"
-          style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:none;font-size:.75rem;cursor:pointer;color:var(--ink)">
-          ✎ ${s.editForm}
-        </button>
-        <button onclick="sendSingle(${i})"
-          style="flex:1;padding:8px;border:none;border-radius:8px;background:var(--ink);color:var(--bg);font-size:.75rem;cursor:pointer;">
-          ${item.failed ? s.retry : s.invia}
-        </button>
-        <button onclick="deleteSingle(${i})"
-          style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:none;font-size:.75rem;cursor:pointer;color:var(--error)">
-          ✕
-        </button>
+      <div class="card-actions">
+        <button class="card-btn" onclick="editOutbox(${i})">✎ ${s.editForm}</button>
+        <button class="card-btn primary" onclick="sendSingle(${i})">${item.failed ? s.retry : s.invia}</button>
+        <button class="card-btn danger" onclick="deleteSingle(${i})">✕</button>
       </div>`;
     list.appendChild(el);
   });
