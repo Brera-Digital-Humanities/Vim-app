@@ -117,12 +117,19 @@ function applyUILang() {
   if (btnComp)  btnComp.textContent  = s.completato;
 }
 
-/** updateOutboxBadge() — Update the numeric badge on "Forms to send"; hide it when the queue is empty. */
-function updateOutboxBadge() {
-  const badge = document.getElementById('outbox-badge');
+// Set a home menu badge to `count` (hidden when zero).
+function _setBadge(id, count) {
+  const badge = document.getElementById(id);
   if (!badge) return;
-  badge.style.display = outbox.length ? '' : 'none';
-  badge.textContent   = outbox.length;
+  badge.style.display = count ? '' : 'none';
+  badge.textContent   = count;
+}
+
+/** updateOutboxBadge() — Refresh all home count badges (drafts, outbox, sent). */
+function updateOutboxBadge() {
+  _setBadge('drafts-badge', drafts.length);
+  _setBadge('outbox-badge', outbox.length);
+  _setBadge('sent-badge',   sentForms.length);
 }
 
 

@@ -26,6 +26,7 @@ function goHome() {
   showScreen('screen-home', tr().appTitle, false);
   document.getElementById('lang-btn').style.display = 'none';
   applyUILang();
+  updateOutboxBadge();   // refresh drafts/outbox/sent count badges
   if (typeof updateStorageWarning === 'function') updateStorageWarning();
 }
 

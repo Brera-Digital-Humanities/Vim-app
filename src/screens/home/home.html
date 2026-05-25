@@ -44,35 +44,37 @@
           <div class="home-section-label">Archivio</div>
           <div class="home-menu">
 
-            <!-- Edit draft -->
+            <!-- Edit draft (badge = number of saved drafts) -->
             <div class="menu-item" onclick="showDraft()">
               <div class="mi-icon">✏️</div>
               <div class="mi-body">
                 <div class="mi-title">Modifica bozza</div>
                 <div class="mi-sub">Riprendi una compilazione</div>
               </div>
+              <span class="menu-badge" id="drafts-badge" style="display:none">0</span>
               <span class="mi-arrow">›</span>
             </div>
 
-            <!-- Forms to send (outbox). #outbox-badge: numeric badge, hidden when
-                 the outbox is empty; updated by updateOutboxBadge(). -->
+            <!-- Forms to send (outbox). Badges (set by updateHomeBadges) sit
+                 before the arrow; hidden when the count is zero. -->
             <div class="menu-item" onclick="showOutbox()">
               <div class="mi-icon">📤</div>
               <div class="mi-body">
                 <div class="mi-title">Moduli da inviare</div>
                 <div class="mi-sub">In attesa di connessione</div>
               </div>
-              <span class="mi-arrow">›</span>
               <span class="menu-badge" id="outbox-badge" style="display:none">0</span>
+              <span class="mi-arrow">›</span>
             </div>
 
-            <!-- Sent forms -->
+            <!-- Sent forms (badge = number of sent forms) -->
             <div class="menu-item" onclick="showSent()">
               <div class="mi-icon">✅</div>
               <div class="mi-body">
                 <div class="mi-title">Moduli inviati</div>
                 <div class="mi-sub">Visualizza risposte inviate</div>
               </div>
+              <span class="menu-badge" id="sent-badge" style="display:none">0</span>
               <span class="mi-arrow">›</span>
             </div>
           </div>
