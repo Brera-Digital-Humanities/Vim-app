@@ -65,10 +65,3 @@ styles/modal.scss
 styles/feedback.scss
 styles/rtl.scss
 styles/responsive.scss
-
-# [enketo-scss] — DORMANT. Theme for Enketo Express (targets .question/.paper…),
-# kept for a possible future Enketo path. The theme now lives in enketo/theme/
-# (outside src/); these paths are not consumed by build-app.sh.
-[enketo-scss]
-styles/tokens.scss
-../enketo/theme/theme.scss
