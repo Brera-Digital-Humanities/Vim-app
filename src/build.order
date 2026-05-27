@@ -29,6 +29,7 @@ core/clock.js
 core/i18n-runtime.js
 core/labels.js
 core/relevant.js
+core/calculate.js
 core/router.js
 core/auth.js
 core/feedback.js

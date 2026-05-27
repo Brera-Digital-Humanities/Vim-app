@@ -72,12 +72,19 @@ async function main() {
     return String(val);
   };
 
-  // ── Build PAGES + RELEVANT from survey ─────────────────────────────────────
+  // ── Build PAGES + RELEVANT + CALCULATIONS from survey ───────────────────────
   const PAGES = [];
   const RELEVANT = {};
+  const CALCULATIONS = [];   // ordered [name, expr]; calculate fields aren't rendered
   let cur = null;
   for (const row of content.survey) {
     const t = row.type;
+    // calculate fields are not rendered, but their value feeds cascading selects
+    // (choice_filter, e.g. region_district's pg=${paese_group}) and metadata.
+    if (t === 'calculate' && row.name && row.calculation) {
+      CALCULATIONS.push([row.name, row.calculation, row.$xpath || row.name]);
+      continue;
+    }
     if (t === 'begin_group') {
       cur = { name: row.name, label_it: pick(row.label,'it'), label_en: pick(row.label,'en'),
               label_ar: pick(row.label,'ar'), fields: [] };
@@ -145,6 +152,8 @@ const CHOICES = ${JSON.stringify(CHOICES)};
 const PAGES = ${JSON.stringify(PAGES)};
 
 const RELEVANT = ${JSON.stringify(RELEVANT)};
+
+const CALCULATIONS = ${JSON.stringify(CALCULATIONS)};
 `;
   fs.writeFileSync(OUT, header);
 
@@ -154,6 +163,7 @@ const RELEVANT = ${JSON.stringify(RELEVANT)};
   console.log(`    PAGES:    ${PAGES.length} sections, ${nFields} fields`);
   console.log(`    CHOICES:  ${Object.keys(CHOICES).length} lists`);
   console.log(`    RELEVANT: ${Object.keys(RELEVANT).length} conditional fields`);
+  console.log(`    CALCULATIONS: ${CALCULATIONS.length} calculate fields`);
   console.log('✓ Sync done. Run `npm run build` to regenerate the app.');
 }
 

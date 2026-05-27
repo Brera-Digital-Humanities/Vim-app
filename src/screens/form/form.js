@@ -319,6 +319,7 @@ function markComplete() {
  * is sent automatically when online or only on manual request.
  */
 function _finalizeComplete(autoSend) {
+  recalc();              // ensure calculate fields (paese_group, file_name) are current
   clearHiddenFields();   // safety net: never submit values of hidden fields
   const id = window._instanceId || newId();   // stable instanceID for dedup
   const saved = {
@@ -584,7 +585,9 @@ function attachListeners(card, q) {
   card.querySelectorAll('input:not([type=file]):not([type=range]), textarea, select').forEach(inp => {
     inp.addEventListener('input', () => {
       answers[q.name] = inp.value;
+      const changedCalc = recalc();   // recompute calculate fields (e.g. paese_group)
       clearDependentFilters(q.name);
+      changedCalc.forEach(clearDependentFilters);
       clearHiddenFields();
       updateCompleteBtn();
       updateNextBtnState();
@@ -600,7 +603,9 @@ function attachListeners(card, q) {
       card.querySelectorAll(`.choice-item[data-name="${name}"]`).forEach(i => i.classList.remove('selected'));
       item.classList.add('selected');
       answers[name] = val;
+      const changedCalc = recalc();   // recompute calculate fields (e.g. paese_group)
       clearDependentFilters(name);
+      changedCalc.forEach(clearDependentFilters);
       clearHiddenFields();
       updateCompleteBtn();
       updateNextBtnState();

@@ -12,26 +12,47 @@
 
 /**
  * buildSubmissionXml(ans, mf, instanceId) — Build the OpenRosa/XForm XML for a
- * submission: <data id="{uid}"><field>value</field>…<meta><instanceID>…</data>.
- * Media fields carry only the filename (the binary is sent as a separate part).
+ * submission. The Kobo form nests fields inside groups (begin_group), so the
+ * instance must mirror that: <data><pag_nomi><name_english>…</pag_nomi>…. A flat
+ * structure lands in "extra" columns and leaves the form's real columns empty.
+ * Each PAGES section is a group; calculate fields are placed by their xpath
+ * (paese_group at the top level, file_name inside sez_materiali). Media fields
+ * carry only the filename (the binary is sent as a separate multipart part).
  * Built once at completion and stored, so a queued submission is immune to
  * later changes of the form schema.
  */
 function buildSubmissionXml(ans, mf, instanceId) {
-  const xmlParts = [`<?xml version="1.0" ?><data id="${UID}">`];
-  PAGES.forEach(pg => {
-    pg.fields.forEach(q => {
-      const v = ans[q.name];
-      if (v === undefined || v === null || v === '' ||
-          (Array.isArray(v) && v.length === 0)) return;   // skip empty
-      const val = Array.isArray(v) ? v.join(' ') : v;
-      if (mf[q.name]) {
-        xmlParts.push(`<${q.name}>${mf[q.name].name}</${q.name}>`);   // filename only
-      } else {
-        const escaped = String(val).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        xmlParts.push(`<${q.name}>${escaped}</${q.name}>`);
-      }
+  const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+  // One field element, or '' when the field is empty.
+  const fieldEl = (name) => {
+    const v = ans[name];
+    if (v === undefined || v === null || v === '' ||
+        (Array.isArray(v) && v.length === 0)) return '';
+    if (mf[name]) return `<${name}>${esc(mf[name].name)}</${name}>`;   // filename only
+    return `<${name}>${esc(Array.isArray(v) ? v.join(' ') : v)}</${name}>`;
+  };
+
+  // Group calculate fields by their containing group (from xpath "group/field").
+  const calcByGroup = {};   // groupName → [fieldName]
+  const topCalc = [];       // calculate fields at the instance root (e.g. paese_group)
+  if (typeof CALCULATIONS !== 'undefined') {
+    CALCULATIONS.forEach(([name, , xpath]) => {
+      const segs = (xpath || name).split('/');
+      if (segs.length > 1) (calcByGroup[segs[0]] = calcByGroup[segs[0]] || []).push(name);
+      else topCalc.push(name);
     });
+  }
+
+  const xmlParts = [`<?xml version="1.0" ?><data id="${UID}">`];
+  // Root-level calculate fields first (matches form order: paese_group precedes groups)
+  topCalc.forEach(n => { const el = fieldEl(n); if (el) xmlParts.push(el); });
+  // Each section → a group element wrapping its (non-empty) fields + any calc in it
+  PAGES.forEach(pg => {
+    let inner = '';
+    pg.fields.forEach(q => { inner += fieldEl(q.name); });
+    (calcByGroup[pg.name] || []).forEach(n => { inner += fieldEl(n); });
+    if (inner) xmlParts.push(`<${pg.name}>${inner}</${pg.name}>`);
   });
   // OpenRosa meta: stable instanceID → server-side dedup of re-sent forms
   if (instanceId) xmlParts.push(`<meta><instanceID>${instanceId}</instanceID></meta>`);

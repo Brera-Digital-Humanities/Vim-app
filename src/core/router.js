@@ -66,6 +66,7 @@ function resumeDraft(i) {
 function openForm(fieldIdx) {
   window._fieldIdx  = fieldIdx || 0;
   window._compiling = true;
+  recalc();   // derive calculate fields (e.g. paese_group) from current answers
   showScreen('screen-form', tr().questionnaire, true);
   document.getElementById('lang-btn').style.display       = '';
   document.getElementById('form-nav-extra').style.display = 'flex';
