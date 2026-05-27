@@ -57,11 +57,11 @@
 
             <!-- Forms to send (outbox). Badges (set by updateHomeBadges) sit
                  before the arrow; hidden when the count is zero. -->
-            <div class="menu-item" onclick="showOutbox()">
+            <div class="menu-item" id="home-outbox-item" onclick="showOutbox()">
               <div class="mi-icon">📤</div>
               <div class="mi-body">
                 <div class="mi-title">Moduli da inviare</div>
-                <div class="mi-sub">In attesa di connessione</div>
+                <div class="mi-sub" id="home-outbox-sub">In attesa di invio</div>
               </div>
               <span class="menu-badge" id="outbox-badge" style="display:none">0</span>
               <span class="mi-arrow">›</span>
@@ -90,5 +90,3 @@
 
         </div>
       </div>
-
-

@@ -34,8 +34,8 @@ vim-enketo/
 │   ├── app.html                      Guscio PWA a tutto schermo (body.app)
 │   ├── demo.html                     Guscio demo con skin telefono (body.demo)
 │   ├── partials/app-bar.html         Barra app condivisa dalle due pagine
-│   ├── data.js                       PAGES + CHOICES + placeholder credenziali
-│   ├── api.js                        Submit a KoboToolbox (doSubmit)
+│   ├── data.js                       PAGES + CHOICES + UID pubblico del form
+│   ├── api.js                        Submit al backend VIM (doSubmit)
 │   ├── manifest.json                 PWA manifest
 │   ├── assets/logo.svg               Logo del brand (inline a build)
 │   ├── i18n/                         Una lingua per file (it/en/ar + index)
@@ -121,10 +121,11 @@ cd vim-enketo
 npm install
 ```
 
-### 3.5 Configurazione credenziali (.env) — **OBBLIGATORIO**
+### 3.5 Configurazione locale (.env) — **OBBLIGATORIO**
 
-Le credenziali KoboToolbox (token API, UID del form, URL del server) **non sono
-hardcoded** nel codice — sono in un file `.env` locale che è gitignored.
+La PWA riceve solo l'UID pubblico del form e l'URL del backend VIM. Il token
+KoboToolbox resta lato server, nel plugin WinterCMS, e non viene inserito nel
+bundle client.
 
 ```bash
 cp .env.example .env
@@ -135,16 +136,14 @@ Variabili richieste:
 
 | Variabile | Cosa | Dove la trovi |
 |---|---|---|
-| `VIM_KOBO_TOKEN` | Token API personale | KoboToolbox → Account → Security → API Token |
-| `VIM_KOBO_UID` | UID del form | URL del form: `https://eu.kobotoolbox.org/#/forms/<UID>/` |
-| `VIM_KOBO_BASE` | URL server | `https://eu.kobotoolbox.org` (server EU) o `.org` (US) |
+| `VIM_KOBO_UID` | UID del form, inserito nella PWA | URL del form: `https://eu.kobotoolbox.org/#/forms/<UID>/` |
+| `VIM_SERVICES_URL` | API backend VIM | es. `http://localhost:8085/api/v1` |
+| `VIM_KOBO_TOKEN` | Solo per `npm run sync`, non per il build PWA | KoboToolbox → Account → Security → API Token |
+| `VIM_KOBO_BASE` | Solo per `npm run sync` | `https://eu.kobotoolbox.org` (server EU) o `.org` (US) |
 
-> ⚠️ **Sicurezza:** il file `.env` non finisce mai su Git. Se vuoi condividere
-> il progetto, condividi `.env.example` (placeholder) — chi clona dovrà
-> crearsi il proprio `.env` con i propri valori.
->
-> Se il tuo TOKEN è mai stato esposto (chat, commit, file `.bak`),
-> **rigeneralo subito** su KoboToolbox: il vecchio diventa invalido all'istante.
+> **Sicurezza:** il file `.env` non finisce mai su Git. Se vuoi condividere
+> il progetto, condividi `.env.example` (placeholder). Il token Kobo usato per
+> l'invio reale va configurato in `platform/.env` come `KOBO_API_TOKEN`.
 
 ### 3.6 Verifica installazione
 
@@ -205,7 +204,7 @@ Se entrambi i comandi terminano senza errori, l'ambiente è pronto.
 | Navigazione tra schermate | `src/core/router.js` | showScreen, goHome… |
 | Rendering campi, bozze, completamento | `src/screens/form/form.js` | renderPage, nextField, updateCompleteBtn (required+visibili) |
 | Campi condizionali | `RELEVANT` in `data.js` (da Kobo); logica in `core/relevant.js` | sintassi XLSForm: `${campo}='valore'` |
-| Endpoint o formato submit | `src/api.js` → `doSubmit` | invio diretto a KoboToolbox (vedi nodo token, sez. 9) |
+| Endpoint o formato submit | `src/api.js` → `doSubmit` | invio al backend VIM, che inoltra a KoboToolbox |
 | Definizione form (campi, ordine, scelte) | **su Kobo**, poi `npm run sync` | NON si edita `data.js` a mano |
 | Aggiungere/togliere campi del form | `src/data.js` → `PAGES` e `CHOICES` | meglio rigenerare da XLSForm aggiornato |
 | Nome/icone PWA | `src/manifest.json` | |
@@ -227,8 +226,8 @@ In alternativa, se preferisci scegliere quale file aprire manualmente:
 npm run serve             # http-server senza auto-apertura, su http://localhost:8765
 ```
 
-> ⚠️ **NON** aprire il file con `file://` — i fetch verso KoboToolbox
-> vengono bloccati per CORS. Serve sempre un server statico (`npm start`).
+> **NON** aprire il file con `file://`: service worker, cache e chiamate API
+> richiedono un server statico (`npm start`).
 
 ### 4.4 Convenzioni di codice
 
@@ -258,8 +257,8 @@ npm run clean    # rimuove le cartelle generate (dist/ e test/)
 
 `scripts/build-app.sh` concatena gli SCSS (per `build.order`) e li compila
 in-line; concatena `data.js` + i frammenti JS + `api.js`; espande gli schermi
-e l'app-bar condivisa in `app.html` e `demo.html`; inietta le credenziali dal
-`.env` e il logo `assets/logo.svg` come data-URI. Produce due file autonomi:
+e l'app-bar condivisa in `app.html` e `demo.html`; inietta configurazione
+pubblica dal `.env` e il logo `assets/logo.svg` come data-URI. Produce due file autonomi:
 `dist/index.html` (PWA a tutto schermo) e `test/index.html` (demo con skin).
 
 > Nota storica: il progetto aveva anche una pipeline per generare un tema
@@ -278,8 +277,8 @@ rendering. Deployarla significa **servire il file su un host HTTPS**.
   Pages) o un web server (nginx/Apache) che serve `dist/index.html`.
 - **HTTPS obbligatorio** per: installazione come PWA e accesso
   fotocamera/microfono su iOS (non funziona su `http://` da remoto).
-- **Invii:** l'app invia i dati a KoboToolbox. La gestione del token è il
-  punto da curare — vedi sez. 9 (Sicurezza).
+- **Invii:** l'app invia i dati al backend VIM, che inoltra a KoboToolbox con
+  il token server-side.
 - **Offline / PWA:** service worker + IndexedDB già attivi — vedi sez. 7
   (Offline, storage e sincronizzazione). Su HTTPS la PWA si installa su
   iPhone/Android ("Aggiungi a schermata Home").
@@ -300,7 +299,8 @@ inviati appena c'è connessione.
   una versione vecchia).
 - **Asset statici + Google Font**: *cache-first* (i font funzionano offline dopo
   un primo caricamento online).
-- Le richieste a Kobo (invii) passano sempre dalla rete.
+- Le richieste di invio passano sempre dalla rete e vengono fatte verso il
+  backend VIM.
 
 Richiede HTTPS o `localhost`. La cache è versionata (`vim-vN`): alzando la
 versione la vecchia viene ripulita all'attivazione del nuovo service worker.
@@ -349,9 +349,10 @@ persistente diventa più affidabile.
 | `npm install` fallisce con `EACCES` | permessi sbagliati su `node_modules/` | `rm -rf node_modules && npm install` (mai con `sudo`) |
 | `npm start` dice `EADDRINUSE: 0.0.0.0:8765` | un altro server gira sulla porta | trova porta libera con `ss -tln \| grep LISTEN`, poi `npx http-server dist -p <PORTA> -c-1 -o /index.html` (oppure modifica `package.json` → `scripts.start`) |
 | Build fallisce con `ERRORE: src/XX mancante` | file sorgente eliminato | controllare `src/`, ripristinare dal backup |
-| Browser mostra pagina vuota | CORS bloccato | usare server statico, NON `file://` |
-| Submit fallisce con 401 | token Kobo errato/scaduto | rigenera token su Kobo, aggiorna `.env` |
-| Submit fallisce con CORS | dominio non autorizzato | KoboToolbox → Account → Security → API CORS Origins → aggiungere dominio |
+| Browser mostra pagina vuota | app aperta da filesystem o build incompleto | usare server statico, NON `file://` |
+| Submit fallisce con 401/403 | sessione VIM scaduta o login non valida | fare logout/login; la coda resta locale e riprova dopo l'accesso |
+| Submit fallisce con 500 e `KOBO_API_TOKEN is not configured` | token backend mancante | configurare `KOBO_API_TOKEN` in `platform/.env` |
+| Submit fallisce con 4xx/5xx Kobo | errore di validazione o token Kobo lato backend | controllare risposta backend e configurazione `KOBO_*` in WinterCMS |
 | iOS non chiede camera/microfono | HTTP non HTTPS | servire su HTTPS |
 | `npm run sync` fallisce | token/UID errati o niente rete | controlla `.env`; il form dev'essere deployato su Kobo |
 
@@ -361,17 +362,14 @@ persistente diventa più affidabile.
 
 ### 9.1 Credenziali nel repo
 
-- **TOKEN API KoboToolbox:** vive **solo** in `.env` (gitignored). I sorgenti
-  in `src/data.js` usano i placeholder `__VIM_KOBO_TOKEN__` ecc., che
-  vengono sostituiti a build-time. Quindi i sorgenti sono **safe da committare
-  su un repo pubblico**.
-- **Artefatto con credenziali dentro:** `dist/index.html` contiene il
-  TOKEN dopo il build, perché serve al fetch verso Kobo. È **gitignored** — non
-  finisce mai su Git. Stessa cosa per i `.bak`.
-- **Nodo invii (token nel client):** poiché l'app è statica e chiama Kobo dal
-  browser, il token finisce nell'HTML servito. Per un uso pubblico va risolto:
-  (a) un mini-proxy che tiene il token server-side, (b) o usare un backend che
-  inoltra gli invii. Per un uso interno/fidato + CORS configurato può bastare.
+- **TOKEN API KoboToolbox:** non viene inserito nel build della PWA. Il token
+  serve solo per `npm run sync` locale e per il backend WinterCMS che inoltra
+  gli invii a Kobo.
+- **Artefatto senza segreti Kobo:** `dist/index.html` contiene solo il Kobo UID
+  pubblico e l'URL dei servizi VIM. Gli invii passano da WinterCMS con JWT
+  utente.
+- **Nodo invii:** la PWA invia a `/api/v1/kobo/submissions`; WinterCMS tiene il
+  token server-side e inoltra il multipart OpenRosa a KoboToolbox.
 
 ### 9.2 In produzione
 

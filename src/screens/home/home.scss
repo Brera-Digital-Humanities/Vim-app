@@ -59,6 +59,20 @@
 
   &.primary .mi-icon { background: rgba(247,244,239,.12); }
 
+  &.has-error {
+    border-color: rgba(192, 57, 43, .5);
+    background: rgba(192, 57, 43, .06);
+
+    .mi-sub { color: var(--error); }
+    .menu-badge { background: var(--error); }
+  }
+
+  &.is-sending {
+    border-color: var(--accent2);
+
+    .mi-sub { color: var(--accent2); }
+  }
+
   .mi-body { flex: 1; }
 
   .mi-title {
@@ -138,5 +152,4 @@
   color: var(--error);
   flex-shrink: 0;
 }
-
 

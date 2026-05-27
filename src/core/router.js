@@ -2,7 +2,7 @@
 
 
 /** IDs of all screens */
-const SCREENS = ['screen-login', 'screen-lang', 'screen-home', 'screen-form', 'screen-drafts', 'screen-outbox', 'screen-sent'];
+const SCREENS = ['screen-login', 'screen-lang', 'screen-home', 'screen-form', 'screen-drafts', 'screen-outbox', 'screen-sent', 'screen-account'];
 
 /**
  * showScreen(id, title, showPill) — Activate a screen and update the app bar.
@@ -15,6 +15,7 @@ function showScreen(id, title, showPill) {
   const isHome = id === 'screen-home' || id === 'screen-lang' || id === 'screen-login';
   document.getElementById('bar-back-btn').style.display = isHome ? 'none' : 'inline-flex';
   document.getElementById('prog-track').style.display   = showPill ? '' : 'none';
+  if (typeof updateUserBar === 'function') updateUserBar();
   // The "Section X/9" pill belongs to the form only: hide it elsewhere.
   const pill = document.getElementById('pill');
   if (pill) pill.style.display = showPill ? '' : 'none';
@@ -107,4 +108,11 @@ function showSent() {
   renderSent();
 }
 
+/** showAccount() — Open the logged-user screen. */
+function showAccount() {
+  if (!isLoggedIn()) return;
+  window._compiling = false;
+  showScreen('screen-account', tr().accountTitle, false);
+  renderAccount();
+}
 

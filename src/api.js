@@ -1,18 +1,13 @@
 /**
  * VIM — api.js
- * All network calls. Submits completed forms to KoboToolbox.
+ * All network calls. Submits completed forms through the VIM backend.
  *
- * Depends on: data.js (TOKEN, UID, BASE, PAGES) and the navigation bundle
- * (showSuccess, showError, tr, answers, outbox).
+ * Depends on: data.js (UID, PAGES), auth.js (AUTH_API_URL/apiAccessToken),
+ * and the navigation bundle (showSuccess, showError, tr, answers, outbox).
  *
- * To serve the form via Enketo Express instead of KoboToolbox, see
- * ../enketo/README.md (endpoint + config differ; the OpenRosa XML is the same).
+ * The backend keeps the KoboToolbox token server-side and forwards the OpenRosa
+ * multipart payload to Kobo.
  */
-
-
-// API config (TOKEN/UID/BASE come from data.js, injected at build time from
-// .env). The token ships in the built file: convenience for beta, not real
-// security — for production proxy it server-side. See ../enketo/README.md.
 
 
 /**
@@ -49,10 +44,46 @@ function buildSubmissionXml(ans, mf, instanceId) {
  *
  * @param {string} xml - the OpenRosa XML (from buildSubmissionXml)
  * @param {Object} mf  - fieldName → File object
- * @returns {Promise<{ok: boolean, permanent: boolean}>} permanent=true when a
- *          retry can't help (e.g. file too large / bad request / unauthorized).
+ * @returns {Promise<{ok: boolean, permanent: boolean, status?: number, message?: string}>}
+ *          permanent=true when a retry can't help (e.g. file too large / bad request).
  */
 const SUBMIT_TIMEOUT_MS = 120000;   // abort a stalled upload so the queue isn't blocked
+
+function _shortText(value, max) {
+  const text = String(value || '')
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, ' ')
+    .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return text.length > max ? text.slice(0, max) + '...' : text;
+}
+
+function _flattenError(value) {
+  if (!value) return '';
+  if (Array.isArray(value)) return value.map(_flattenError).filter(Boolean).join(' ');
+  if (typeof value === 'object') return Object.values(value).map(_flattenError).filter(Boolean).join(' ');
+  return String(value);
+}
+
+async function _readSubmitError(response) {
+  const raw = await response.text().catch(() => '');
+  let message = response.statusText || 'Submit failed';
+
+  if (raw) {
+    try {
+      const data = JSON.parse(raw);
+      message = data.error || data.message || _flattenError(data.errors) || message;
+      if (data.kobo_response) {
+        message += ' Kobo: ' + _flattenError(data.kobo_response);
+      }
+    } catch (error) {
+      message = raw;
+    }
+  }
+
+  return _shortText(message, 1200);
+}
 
 async function doSubmit(xml, mf) {
   const ctrl  = new AbortController();
@@ -74,29 +105,33 @@ async function doSubmit(xml, mf) {
     });
 
     // ── API call ──────────────────────────────────────────────────────────
-    // POST /api/v2/assets/{uid}/submissions/ (KoboToolbox API v2).
-    // Expected: 201/200 ok · 400 bad XML · 401 bad token · 403 forbidden ·
-    // 413 too large · 5xx server down.
-    const response = await fetch(`${BASE}/api/v2/assets/${UID}/submissions/`, {
-      method:  'POST',
-      headers: { 'Authorization': `Token ${TOKEN}` },
-      body:    formData,
-      signal:  ctrl.signal,
+    // POST /api/v1/kobo/submissions (VIM backend). The backend forwards to
+    // KoboToolbox /submission with the server-side Kobo API token.
+    const response = await fetch(`${AUTH_API_URL}/kobo/submissions`, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': `${apiTokenType || 'bearer'} ${apiAccessToken}`,
+      },
+      body: formData,
+      signal: ctrl.signal,
     });
     clearTimeout(timer);
 
-    if (response.ok || response.status === 201) return { ok: true, permanent: false };
-    // 4xx (bad request / too large / unauthorized) won't succeed on retry;
-    // 408/429 and 5xx are transient.
+    if (response.ok || response.status === 201) return { ok: true, permanent: false, status: response.status };
+    // 4xx from Kobo usually won't succeed on retry. Auth-related 401/403 are
+    // not marked permanent so a re-login can flush the outbox later.
     const s = response.status;
-    const permanent = s >= 400 && s < 500 && s !== 408 && s !== 429;
-    console.error('[VIM API] submit failed:', s);
-    return { ok: false, permanent };
+    const permanent = s >= 400 && s < 500 && s !== 401 && s !== 403 && s !== 408 && s !== 429;
+    const message = await _readSubmitError(response);
+    console.error('[VIM API] submit failed:', s, message);
+    return { ok: false, permanent, status: s, message };
 
   } catch (error) {
     // Network error, CORS, or timeout (abort) → transient, retry later.
     clearTimeout(timer);
-    console.error('[VIM API] submit error:', error && error.name);
-    return { ok: false, permanent: false };
+    const message = error && (error.message || error.name) ? (error.message || error.name) : 'Network error';
+    console.error('[VIM API] submit error:', message);
+    return { ok: false, permanent: false, status: 0, message };
   }
 }

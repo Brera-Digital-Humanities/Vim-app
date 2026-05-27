@@ -3,6 +3,45 @@
 
 // Per-item auto-send toggle chip (under the form name)
 
+.outbox-debug {
+    margin: 0 16px 12px;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: .75rem;
+    line-height: 1.45;
+
+    .odb-title {
+        margin-bottom: 6px;
+        color: var(--ink);
+        font-size: .68rem;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+    }
+
+    .odb-result {
+        margin-top: 6px;
+        font-weight: 700;
+
+        &.ok { color: var(--accent2); }
+        &.error { color: var(--error); }
+    }
+
+    pre {
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        margin: 8px 0 0;
+        padding: 8px;
+        border-radius: 6px;
+        background: rgba(0,0,0,.04);
+        color: var(--ink);
+        font-family: 'DM Mono', monospace;
+        font-size: .68rem;
+    }
+}
 
 .outbox-card-header{
     display: flex;
@@ -42,6 +81,16 @@
             border-color: var(--accent2);
         }
     }
+}
+
+.list-card.is-sending {
+    border-color: var(--accent2);
+    box-shadow: 0 0 0 1px rgba(94, 143, 113, .15);
+}
+
+.list-card.is-error {
+    border-color: rgba(192, 57, 43, .55);
+    background: rgba(192, 57, 43, .04);
 }
 
 .send-all-box {

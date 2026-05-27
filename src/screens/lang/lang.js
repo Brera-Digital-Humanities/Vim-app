@@ -109,6 +109,7 @@ function applyUILang() {
   if (draftH) draftH.textContent = s.draftsHeader;
   const sendAllBtn = document.getElementById('send-all-btn');
   if (sendAllBtn) sendAllBtn.textContent = s.sendAll;
+  updateOutboxHomeStatus();
 
   // Form buttons (if visible)
   const btnDraft = document.querySelector('.btn-draft');
@@ -130,6 +131,31 @@ function updateOutboxBadge() {
   _setBadge('drafts-badge', drafts.length);
   _setBadge('outbox-badge', outbox.length);
   _setBadge('sent-badge',   sentForms.length);
+  updateOutboxHomeStatus();
 }
 
+function updateOutboxHomeStatus() {
+  const sub = document.getElementById('home-outbox-sub');
+  const item = document.getElementById('home-outbox-item');
+  if (!sub) return;
+  const s = tr();
+  const hasError = outbox.some(it => it.failed || it.lastError);
+  const sending = typeof isOutboxSending === 'function' && isOutboxSending();
 
+  if (item) {
+    item.classList.toggle('has-error', hasError);
+    item.classList.toggle('is-sending', sending);
+  }
+
+  if (!outbox.length) {
+    sub.textContent = s.outboxSubEmpty;
+  } else if (sending) {
+    sub.textContent = s.outboxSubSending;
+  } else if (hasError) {
+    sub.textContent = s.outboxSubError;
+  } else if (navigator.onLine) {
+    sub.textContent = s.outboxSubOnline;
+  } else {
+    sub.textContent = s.outboxSubOffline;
+  }
+}

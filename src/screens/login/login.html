@@ -1,5 +1,5 @@
       <!-- ═══════════════════════════════════════════════════════════════
-           SCREEN: LOGIN — provisional tester access (name + shared code).
+           SCREEN: LOGIN — API access with username and password.
            First screen at startup if not logged in. Logic in core/auth.js.
       ══════════════════════════════════════════════════════════════════ -->
       <div class="screen active" id="screen-login">
@@ -8,12 +8,12 @@
            <div class="brand">
             <div class="brand-logo" aria-hidden="true"></div>
             <h2>La valigia immateriale</h2>
-            <p>Tester login (beta)</p>
+            <p>Login</p>
           </div>
           <div class="login-form">
-            <input type="text" id="login-name" class="login-input" placeholder="Nome" autocomplete="name"/>
+            <input type="text" id="login-name" class="login-input" placeholder="Username" autocomplete="username"/>
             <div class="login-pass">
-              <input type="password" id="login-code" class="login-input" placeholder="Codice di accesso"/>
+              <input type="password" id="login-code" class="login-input" placeholder="Password" autocomplete="current-password"/>
               <button type="button" class="login-eye" id="login-eye" onclick="toggleLoginCode()" aria-label="Mostra codice">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
               </button>

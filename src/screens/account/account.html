@@ -1,0 +1,19 @@
+      <!-- ═══════════════════════════════════════════════════════════════
+           SCREEN: ACCOUNT — logged user details and client-side logout.
+      ══════════════════════════════════════════════════════════════════ -->
+      <div class="screen" id="screen-account">
+        <div class="screen-scroll">
+          <div class="account-panel">
+            <div class="account-avatar" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21a8 8 0 0 0-16 0"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+            </div>
+            <div class="account-label" id="account-label">Utente loggato</div>
+            <div class="account-name" id="account-name"></div>
+            <div class="account-username" id="account-username"></div>
+            <button class="account-logout-btn" id="account-logout-btn" onclick="logout()">Disconnetti</button>
+          </div>
+        </div>
+      </div>

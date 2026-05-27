@@ -60,8 +60,17 @@ function saveSentRecord(rec)    { return _tx(STORE_SENT, 'readwrite', s => s.put
 // Put a singleton value under `key` in the 'state' store.
 function _saveState(key, value) { return _tx(STORE_STATE, 'readwrite', s => s.put(value, key)); }
 
-/** saveAuth() — Persist the tester login state (provisional). */
-function saveAuth()  { return _saveState('auth', { loggedIn, testerName }); }
+/** saveAuth() — Persist the API login state. */
+function saveAuth() {
+  return _saveState('auth', {
+    loggedIn,
+    testerName,
+    apiUsername,
+    apiAccessToken,
+    apiTokenType,
+    apiUser,
+  });
+}
 
 /** saveLang() — Persist the chosen language (to skip the language screen next time). */
 function saveLang()  { return _saveState('lang', { currentLangIdx, langChosen }); }
@@ -79,7 +88,14 @@ function loadState() {
         drafts    = d;
         outbox    = o;
         sentForms = sent;
-        if (a && typeof a === 'object') { loggedIn = !!a.loggedIn; testerName = a.testerName || ''; }
+        if (a && typeof a === 'object') {
+          loggedIn       = !!a.loggedIn;
+          testerName     = a.testerName || a.apiUsername || '';
+          apiUsername    = a.apiUsername || a.testerName || '';
+          apiAccessToken = a.apiAccessToken || '';
+          apiTokenType   = a.apiTokenType || 'bearer';
+          apiUser        = a.apiUser || null;
+        }
         if (l && typeof l === 'object' && typeof l.currentLangIdx === 'number') {
           currentLangIdx = l.currentLangIdx;
           langChosen     = !!l.langChosen;

@@ -19,6 +19,20 @@
     style="display:none;background:none;border:none;cursor:pointer;font-size:.75rem;color:var(--muted);padding:2px 6px;border:1px solid var(--border);border-radius:6px;">
     🌐
   </button>
+  <button
+    id="bar-user-btn"
+    class="bar-user-btn"
+    onclick="showAccount()"
+    style="display:none"
+    aria-label="Account">
+    <span class="bar-user-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 21a8 8 0 0 0-16 0"/>
+        <circle cx="12" cy="7" r="4"/>
+      </svg>
+    </span>
+    <span class="bar-user-name" id="bar-user-name"></span>
+  </button>
 </div>
 
 <!-- Progress track: thin line under the app bar -->

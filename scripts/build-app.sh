@@ -45,14 +45,12 @@ expand_markers() {
     { print }' "$SRC/$tpl"
 }
 
-# Inject .env credentials + tester code, then inline the brand logo data-URI.
+# Inject public .env config, then inline the brand logo data-URI.
 inject() {
   local out="$1"
   sed -i \
-    -e "s|__VIM_KOBO_TOKEN__|$VIM_KOBO_TOKEN|g" \
     -e "s|__VIM_KOBO_UID__|$VIM_KOBO_UID|g" \
-    -e "s|__VIM_KOBO_BASE__|$VIM_KOBO_BASE|g" \
-    -e "s|__VIM_TESTER_CODE__|$VIM_TESTER_CODE|g" \
+    -e "s|__VIM_SERVICES_URL__|$VIM_SERVICES_URL|g" \
     "$out"
   # base64 data-URI is too big for sed's command line → perl reads it from a file.
   LOGO_FILE="$TMP_LOGO" perl -i -pe '
@@ -83,7 +81,7 @@ for f in data.js app.html demo.html api.js build.order partials/app-bar.html; do
   [ -f "$SRC/$f" ] || { echo "ERROR: src/$f missing"; exit 1; }
 done
 
-# ── 0b. Load .env (TOKEN, UID, BASE, TESTER_CODE) ───────────────────────────
+# ── 0b. Load .env (UID, SERVICES_URL) ───────────────────────────────────────
 if [ -f "$ROOT/.env" ]; then
   # shellcheck disable=SC1091
   set -a; . "$ROOT/.env"; set +a
@@ -91,10 +89,8 @@ else
   echo "ERROR: .env missing. Run: cp .env.example .env  and fill in your values."
   exit 1
 fi
-: "${VIM_KOBO_TOKEN:?VIM_KOBO_TOKEN not set in .env}"
 : "${VIM_KOBO_UID:?VIM_KOBO_UID not set in .env}"
-: "${VIM_KOBO_BASE:?VIM_KOBO_BASE not set in .env}"
-: "${VIM_TESTER_CODE:?VIM_TESTER_CODE not set in .env}"
+: "${VIM_SERVICES_URL:?VIM_SERVICES_URL not set in .env}"
 
 # ── 1. Concatenate SCSS (per build.order) then compile ──────────────────────
 echo "▸ Concatenate + compile SCSS"

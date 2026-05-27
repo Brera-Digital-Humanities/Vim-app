@@ -16,6 +16,7 @@ screens/form/form.html
 screens/drafts/drafts.html
 screens/outbox/outbox.html
 screens/sent/sent.html
+screens/account/account.html
 
 [js]
 i18n/it.js
@@ -37,6 +38,7 @@ screens/form/form.js
 screens/drafts/drafts.js
 screens/outbox/outbox.js
 screens/sent/sent.js
+screens/account/account.js
 core/init.js
 
 # [scss] — theme for the CUSTOM APP. Targets the custom DOM (.phone-shell,
@@ -56,6 +58,7 @@ screens/lang/lang.scss
 screens/home/home.scss
 screens/form/form.scss
 screens/outbox/outbox.scss
+screens/account/account.scss
 styles/buttons.scss
 styles/modal.scss
 styles/feedback.scss

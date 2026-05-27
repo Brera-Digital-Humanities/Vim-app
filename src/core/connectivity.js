@@ -13,6 +13,10 @@ function updateConnectivity() {
     box.classList.toggle('offline', !online);
     txt.textContent = online ? tr().statusOnline : tr().statusOffline;
   }
+  if (typeof updateOutboxHomeStatus === 'function') updateOutboxHomeStatus();
+  if (document.getElementById('screen-outbox')?.classList.contains('active') && typeof renderOutbox === 'function') {
+    renderOutbox();
+  }
   if (online && typeof autoSync === 'function') autoSync();   // flush queued forms
 }
 

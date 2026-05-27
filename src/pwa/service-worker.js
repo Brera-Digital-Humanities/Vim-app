@@ -1,7 +1,7 @@
 // VIM service worker — offline app shell cache.
 // Network-first for the HTML document (so an updated build always loads when
 // online, falling back to cache offline); cache-first for static same-origin
-// assets and Google Fonts. Everything else (e.g. submissions to Kobo) → network.
+// assets and Google Fonts. Everything else (e.g. form submissions) → network.
 
 const CACHE = 'vim-v2';
 const CORE = ['./index.html', './manifest.json'];
@@ -29,7 +29,7 @@ self.addEventListener('fetch', e => {
   const url = new URL(req.url);
   const sameOrigin = url.origin === self.location.origin;
   const isFont     = FONT_HOSTS.includes(url.host); // Google Fonts CSS + .woff2
-  if (!sameOrigin && !isFont) return;               // e.g. Kobo submissions → network
+  if (!sameOrigin && !isFont) return;               // e.g. external APIs → network
 
   // The HTML document: network-first, so a rebuilt app loads when online.
   const isDoc = req.mode === 'navigate' || (sameOrigin && url.pathname.endsWith('.html'));

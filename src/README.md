@@ -24,8 +24,8 @@ src/
 ├── demo.html          Guscio demo con skin telefono (body.demo) → test/index.html
 ├── partials/
 │   └── app-bar.html   Barra app condivisa, inserita via <!-- @file:… --> nei gusci
-├── data.js            PAGES + CHOICES + placeholder credenziali (__VIM_KOBO_*__)
-├── api.js             doSubmit() — invio XForm/OpenRosa a KoboToolbox
+├── data.js            PAGES + CHOICES + UID pubblico del form Kobo
+├── api.js             doSubmit() — invio XForm/OpenRosa al backend VIM
 ├── manifest.json      Web App Manifest (PWA)
 ├── assets/
 │   └── logo.svg       Logo del brand (inline come data-URI a build time)
@@ -94,7 +94,7 @@ genera da qui con `npm run build` — vedi `../SETUP.md` sez. 5.
 - **Form engine**: KoboToolbox (definizione XLSForm, presa via API)
 - **Frontend**: HTML5 + SCSS + JavaScript vanilla ES6+ (nessun framework, nessuna dep a runtime)
 - **Font**: Cormorant Garamond (serif), DM Sans (UI), DM Mono (numeri), Noto Naskh Arabic (RTL)
-- **API**: KoboToolbox REST API v2, formato OpenRosa/XForm
+- **API**: backend VIM, formato OpenRosa/XForm inoltrato a KoboToolbox
 - **Build**: Dart Sass + bash scripts, concatenazione per `build.order` (vedi `package.json`)
 
 ---

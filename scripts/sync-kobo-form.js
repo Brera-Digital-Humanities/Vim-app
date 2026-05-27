@@ -4,7 +4,7 @@
  *
  * Fetches the asset content from KoboToolbox and maps survey + choices into
  * VIM's PAGES / CHOICES / RELEVANT structures. Credentials are read from .env;
- * the written data.js keeps __VIM_KOBO_*__ placeholders (injected at build time).
+ * the written data.js keeps only the public Kobo UID placeholder.
  *
  * Usage: npm run sync   (or: node scripts/sync-kobo-form.js)
  */
@@ -134,13 +134,11 @@ async function main() {
  * KoboToolbox. Do not edit by hand — re-run \`npm run sync\` after changing
  * the form on Kobo.
  *
- * SECURITY: TOKEN/UID/BASE are placeholders, injected at build time from .env.
- * This file is safe to commit (no credentials).
+ * SECURITY: only the public Kobo UID is injected at build time. The Kobo API
+ * token stays server-side in WinterCMS.
  */
 
-const TOKEN = '__VIM_KOBO_TOKEN__';
 const UID   = '__VIM_KOBO_UID__';
-const BASE  = '__VIM_KOBO_BASE__';
 
 const CHOICES = ${JSON.stringify(CHOICES)};
 

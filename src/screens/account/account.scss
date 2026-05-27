@@ -1,0 +1,63 @@
+// VIM — account screen
+
+
+.account-panel {
+  margin: 18px 16px;
+  padding: 22px 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  text-align: center;
+}
+
+.account-avatar {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 12px;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: var(--accent);
+
+  svg {
+    width: 30px;
+    height: 30px;
+  }
+}
+
+.account-label {
+  font-size: .68rem;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.account-name {
+  margin-top: 8px;
+  font-size: 1.08rem;
+  font-weight: 500;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.account-username {
+  margin-top: 3px;
+  min-height: 1.1em;
+  font-size: .78rem;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.account-logout-btn {
+  width: 100%;
+  margin-top: 22px;
+  padding: 13px 16px;
+  border: none;
+  border-radius: 8px;
+  background: var(--ink);
+  color: var(--bg);
+  font-family: $font-sans;
+  font-size: .85rem;
+  cursor: pointer;
+}
