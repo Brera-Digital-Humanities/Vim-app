@@ -134,12 +134,24 @@ async function _sendItem(item) {
   item.attempts = (item.attempts || 0) + 1;
   delete item.lastError;
   delete item.lastStatus;
-  const res = await doSubmit(xml, item.mediaFiles);
+  const res = await doSubmit(xml, item.mediaFiles, item.submissionId);
+  if (res.submissionId) item.submissionId = res.submissionId;
+  if (res.koboId) item.koboId = res.koboId;
+  if (res.koboUuid) item.koboUuid = res.koboUuid;
+
   if (res.ok) {
     _outboxLastResult = { ok: true, label: item.label, at: item.lastAttemptAt, message: tr().submitOk };
     // Keep a text-only record (answers include media filenames); drop the media
     // Blobs by removing the outbox record → keeps the DB light.
-    const sentRec = { id: item.id, label: item.label, sentAt: new Date().toLocaleString(), answers: item.answers };
+    const sentRec = {
+      id: item.id,
+      submissionId: item.submissionId || null,
+      koboId: item.koboId || null,
+      koboUuid: item.koboUuid || null,
+      label: item.label,
+      sentAt: new Date().toLocaleString(),
+      answers: item.answers,
+    };
     sentForms.push(sentRec);
     saveSentRecord(sentRec);
     const i = outbox.indexOf(item);

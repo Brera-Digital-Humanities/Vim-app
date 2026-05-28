@@ -5,7 +5,7 @@ let pageIdx        = 0;      // Current section index (0-based)
 let answers        = {};     // fieldName → answer value
 let mediaFiles     = {};     // fieldName → File object
 let outbox         = [];     // Completed forms to send
-                             // Shape: [{id, answers, mediaFiles, savedAt, label}]  (id = instanceID)
+                             // Shape: [{id, submissionId, answers, mediaFiles, savedAt, label}]  (id = instanceID)
 let sentForms      = [];     // Already-sent forms (metadata only)
 let drafts         = [];     // Saved drafts
                              // Shape: [{id, answers, mediaFiles, pageIdx, fieldIdx, savedAt, label}]
@@ -20,4 +20,3 @@ let apiUser        = null;   // Backend user payload
 let loggedIn       = false;  // True after API login (persisted)
 let langChosen     = false;  // True once a language was picked (persisted):
                              // if set, the language screen is skipped at startup
-

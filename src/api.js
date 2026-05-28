@@ -87,13 +87,14 @@ function _flattenError(value) {
   return String(value);
 }
 
-async function _readSubmitError(response) {
+async function _readSubmitResponse(response) {
   const raw = await response.text().catch(() => '');
   let message = response.statusText || 'Submit failed';
+  let data = null;
 
   if (raw) {
     try {
-      const data = JSON.parse(raw);
+      data = JSON.parse(raw);
       message = data.error || data.message || _flattenError(data.errors) || message;
       if (data.kobo_response) {
         message += ' Kobo: ' + _flattenError(data.kobo_response);
@@ -103,10 +104,15 @@ async function _readSubmitError(response) {
     }
   }
 
-  return _shortText(message, 1200);
+  return {
+    message: _shortText(message, 1200),
+    submissionId: data && data.submission_id ? data.submission_id : null,
+    koboId: data && data.kobo_id ? data.kobo_id : null,
+    koboUuid: data && data.kobo_uuid ? data.kobo_uuid : null,
+  };
 }
 
-async function doSubmit(xml, mf) {
+async function doSubmit(xml, mf, submissionId) {
   const ctrl  = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), SUBMIT_TIMEOUT_MS);
   try {
@@ -119,6 +125,14 @@ async function doSubmit(xml, mf) {
       new Blob([xml], { type: 'text/xml' }),
       'submission.xml'
     );
+
+    if (submissionId) {
+      formData.append('submission_id', String(submissionId));
+    }
+
+    if (typeof UID !== 'undefined' && UID) {
+      formData.append('kobo_asset_uid', UID);
+    }
 
     // Media attachments: each file keyed by its field name
     Object.entries(mf).forEach(([fieldName, file]) => {
@@ -139,14 +153,34 @@ async function doSubmit(xml, mf) {
     });
     clearTimeout(timer);
 
-    if (response.ok || response.status === 201) return { ok: true, permanent: false, status: response.status };
+    const payload = await _readSubmitResponse(response);
+
+    if (response.ok || response.status === 201) {
+      return {
+        ok: true,
+        permanent: false,
+        status: response.status,
+        submissionId: payload.submissionId,
+        koboId: payload.koboId,
+        koboUuid: payload.koboUuid,
+      };
+    }
+
     // 4xx from Kobo usually won't succeed on retry. Auth-related 401/403 are
     // not marked permanent so a re-login can flush the outbox later.
     const s = response.status;
     const permanent = s >= 400 && s < 500 && s !== 401 && s !== 403 && s !== 408 && s !== 429;
-    const message = await _readSubmitError(response);
+    const message = payload.message;
     console.error('[VIM API] submit failed:', s, message);
-    return { ok: false, permanent, status: s, message };
+    return {
+      ok: false,
+      permanent,
+      status: s,
+      message,
+      submissionId: payload.submissionId,
+      koboId: payload.koboId,
+      koboUuid: payload.koboUuid,
+    };
 
   } catch (error) {
     // Network error, CORS, or timeout (abort) → transient, retry later.

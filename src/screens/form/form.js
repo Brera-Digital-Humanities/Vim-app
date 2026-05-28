@@ -336,6 +336,12 @@ function _finalizeComplete(autoSend) {
   };
   // Replace in place if re-editing an outbox item, otherwise append.
   const ix = window._editingOutboxId ? outbox.findIndex(o => o.id === window._editingOutboxId) : -1;
+  if (ix > -1) {
+    const prev = outbox[ix];
+    saved.submissionId = prev.submissionId || null;
+    saved.koboId = prev.koboId || null;
+    saved.koboUuid = prev.koboUuid || null;
+  }
   if (ix > -1) outbox[ix] = saved; else outbox.push(saved);
   saveOutboxRecord(saved);
   // If a draft was being completed, remove it (same instanceID is now in outbox).
